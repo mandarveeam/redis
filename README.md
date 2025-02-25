@@ -17,7 +17,7 @@ This project is a simple Flask web application that connects to a Redis database
 
 ## Project Structure
 ```
-app2/
+app/
 │-- Dockerfile
 │-- app.py
 │-- requirements.txt
@@ -42,8 +42,8 @@ docker run -p 8000:8000 \
 
 ### 2. Push to Azure Container Registry (ACR)
 ```sh
-docker tag flask-redis-app mandar01.azurecr.io/flask-redis-app:latest
-docker push mandar01.azurecr.io/flask-redis-app:latest
+docker tag flask-redis-app yourrepo.azurecr.io/flask-redis-app:latest
+docker push yourrepo.azurecr.io/flask-redis-app:latest
 ```
 
 ### 3. Deploy on Kubernetes
