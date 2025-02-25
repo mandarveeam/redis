@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-redis-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flask-redis-app
+  template:
+    metadata:
+      labels:
+        app: flask-redis-app
+    spec:
+      containers:
+        - name: redis
+          image: redis:latest
+          ports:
+            - containerPort: 6379
+          args: ["--save", "60", "1", "--loglevel", "warning"]
+          volumeMounts:
+            - name: redis-storage
+              mountPath: /data
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+        - name: flask-redis-app
+          image: mandar01.azurecr.io/flask-redis-app:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: REDIS_HOST
+              value: "localhost"  # Redis container name used as hostname
+            - name: REDIS_PORT
+              value: "6379"
+
+      volumes:
+        - name: redis-storage
+          persistentVolumeClaim:
+            claimName: redis-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-redis-app-service
+spec:
+  selector:
+    app: flask-redis-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer  # Change to NodePort or LoadBalancer if needed
